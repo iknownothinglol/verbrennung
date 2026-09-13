@@ -30,8 +30,10 @@ N            → N₂   (unverändert ins Rauchgas)
 ```
 
 Der im Brennstoff gebundene Sauerstoff senkt den O₂-Bedarf; **feuchte
-Verbrennungsluft** bringt zusätzlich H₂O ins Rauchgas. Alle Mengen sind molar,
-pro kg Brennstoff (kmol/kg\_BS).
+Verbrennungsluft** bringt zusätzlich H₂O ins Rauchgas. Im Luftrahmen sitzt diese
+Luftfeuchte als H₂O-Band **oben auf** der trockenen Luft — sie verändert die
+O₂/N₂-Teilung und damit die **N₂-Menge nicht** (das N₂ folgt allein der trockenen
+Luft). Alle Mengen sind molar, pro kg Brennstoff (kmol/kg\_BS).
 
 ## Was das Werkzeug kann
 

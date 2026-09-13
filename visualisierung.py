@@ -40,11 +40,21 @@ def zeichne_luftrahmen(ax, luft: Luftrahmen):
         ax.annotate(f"Überschussluft\n(Höhe λ−1 = {hue:.2f})",
                     xy=(1.02, 1 + hue / 2), va="center", fontsize=9)
 
+    # Luftfeuchte: volle Breite oben aufgesetzt (sitzt AUF der trockenen Luft,
+    # verändert die O2/N2-Teilung nicht) — Höhe in Einheiten der Mindestluft
+    h_feucht = 0.0
+    if luft.v_H2O_luft > 0 and luft.v_luft_min_tr > 0:
+        h_feucht = luft.v_H2O_luft / luft.v_luft_min_tr
+        _kasten(ax, 0, lam, 1, h_feucht, FARBE["H2O"],
+                f"H₂O-Luftfeuchte {100*luft.x_H2O_luft:.1f} %", fs=8)
+        ax.annotate("feuchte Luft\n(H₂O obendrauf)",
+                    xy=(1.02, lam + h_feucht / 2), va="center", fontsize=8)
+
     ax.set_xlim(0, 1.7)
-    ax.set_ylim(0, max(lam, 1.05) + 0.1)
+    ax.set_ylim(0, max(lam + h_feucht, 1.05) + 0.1)
     ax.set_title(f"Luftrahmen — Luftzahl λ = {lam:.2f}", fontsize=11)
     ax.set_xticks([])
-    ax.set_ylabel("Höhe (× Mindestluft)")
+    ax.set_ylabel("Höhe (× trockene Mindestluft)")
 
 
 def zeichne_rauchgas(ax, rg: Rauchgas):
