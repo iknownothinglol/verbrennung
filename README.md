@@ -28,6 +28,11 @@ Dieses Projekt verfolgt **zwei Ziele**:
 
 ## Die Idee
 
+Die **Verbrennungsrechnung** ist die punktstärkste Rechenaufgabe in der Klausur
+des Moduls *Energierohstoffe und -technik 2*. Um sie in der Prüfung **schneller
+und zuverlässiger** zu lösen, habe ich mir dieses anschauliche
+**Kästchen-Denkmodell** selbst erarbeitet — dieses Projekt gießt es in Code.
+
 **Luftrahmen.** Die Verbrennungsluft wird als Rahmen gedacht, volumetrisch geteilt
 in **O₂ (21 %)** und **N₂ (79 %)**. Die stöchiometrische *Mindestluft* hat die
 Höhe 1; ein zweiter, gleicher Rahmen der Höhe **λ − 1** ist die *Überschussluft*.
