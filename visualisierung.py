@@ -29,29 +29,34 @@ def zeichne_luftrahmen(ax, luft: Luftrahmen):
     xO2 = luft.x_O2_luft
     lam = luft.lam
 
+    # trockene Luft: O2/N2 über die volle Höhe λ (Mindestluft 0..1 + Überschuss 1..λ)
     _kasten(ax, 0, 0, xO2, 1, FARBE["O2"], "O₂\n21 %")
     _kasten(ax, xO2, 0, 1 - xO2, 1, FARBE["N2"], "N₂\n79 %")
-    ax.annotate("Mindestluft\n(Höhe 1)", xy=(1.02, 0.5), va="center", fontsize=9)
 
     hue = max(lam - 1, 0)
     if hue > 0:
         _kasten(ax, 0, 1, xO2, hue, FARBE["O2"], "O₂")
         _kasten(ax, xO2, 1, 1 - xO2, hue, FARBE["N2"], "N₂")
+
+    # Luftfeuchte: rechts als Spalte über die GANZE Höhe λ — jede Portion Luft
+    # (Mindest- wie Überschussluft) bringt ihren proportionalen H2O-Anteil mit.
+    w_feucht = 0.0
+    if luft.x_H2O_luft > 0:
+        w_feucht = luft.x_H2O_luft / (1 - luft.x_H2O_luft)   # Breite rel. zur trockenen Luft (=1)
+        _kasten(ax, 1, 0, w_feucht, lam, FARBE["H2O"], "H₂O", fs=8)
+
+    xr = 1 + w_feucht + 0.05
+    ax.annotate("Mindestluft\n(Höhe 1)", xy=(xr, 0.4), va="center", fontsize=9)
+    if hue > 0:
         ax.annotate(f"Überschussluft\n(Höhe λ−1 = {hue:.2f})",
-                    xy=(1.02, 1 + hue / 2), va="center", fontsize=9)
+                    xy=(xr, 1 + hue / 2), va="center", fontsize=9)
+    if w_feucht > 0:
+        ax.annotate(f"H₂O-Luftfeuchte {100*luft.x_H2O_luft:.1f} %\n"
+                    "(jede Portion Luft bringt\nihren H₂O-Anteil mit)",
+                    xy=(xr, 0.85), va="center", fontsize=7.5, color="#2f5f9e")
 
-    # Luftfeuchte: volle Breite oben aufgesetzt (sitzt AUF der trockenen Luft,
-    # verändert die O2/N2-Teilung nicht) — Höhe in Einheiten der Mindestluft
-    h_feucht = 0.0
-    if luft.v_H2O_luft > 0 and luft.v_luft_min_tr > 0:
-        h_feucht = luft.v_H2O_luft / luft.v_luft_min_tr
-        _kasten(ax, 0, lam, 1, h_feucht, FARBE["H2O"],
-                f"H₂O-Luftfeuchte {100*luft.x_H2O_luft:.1f} %", fs=8)
-        ax.annotate("feuchte Luft\n(H₂O obendrauf)",
-                    xy=(1.02, lam + h_feucht / 2), va="center", fontsize=8)
-
-    ax.set_xlim(0, 1.7)
-    ax.set_ylim(0, max(lam + h_feucht, 1.05) + 0.1)
+    ax.set_xlim(0, xr + 0.75)
+    ax.set_ylim(0, max(lam, 1.05) + 0.1)
     ax.set_title(f"Luftrahmen — Luftzahl λ = {lam:.2f}", fontsize=11)
     ax.set_xticks([])
     ax.set_ylabel("Höhe (× trockene Mindestluft)")
