@@ -43,20 +43,28 @@ def zeichne_luftrahmen(ax, luft: Luftrahmen):
     w_feucht = 0.0
     if luft.x_H2O_luft > 0:
         w_feucht = luft.x_H2O_luft / (1 - luft.x_H2O_luft)   # Breite rel. zur trockenen Luft (=1)
-        _kasten(ax, 1, 0, w_feucht, lam, FARBE["H2O"], "H₂O", fs=8)
+        _kasten(ax, 1, 0, w_feucht, lam, FARBE["H2O"])       # zu schmal für Text -> Label rechts
+        # Wert der Luftfeuchte direkt an der Spalte (Vol.-% der feuchten Luft)
+        ax.annotate(f"{100*luft.x_H2O_luft:.1f} %",
+                    xy=(1 + w_feucht, lam / 2), xytext=(1 + w_feucht + 0.04, lam / 2),
+                    va="center", fontsize=8, color="#2f5f9e",
+                    arrowprops=dict(arrowstyle="-", color="#2f5f9e", lw=0.8))
 
-    xr = 1 + w_feucht + 0.05
+    xr = 1 + w_feucht + 0.22
     ax.annotate("Mindestluft\n(Höhe 1)", xy=(xr, 0.4), va="center", fontsize=9)
     if hue > 0:
         ax.annotate(f"Überschussluft\n(Höhe λ−1 = {hue:.2f})",
                     xy=(xr, 1 + hue / 2), va="center", fontsize=9)
     if w_feucht > 0:
-        ax.annotate(f"H₂O-Luftfeuchte {100*luft.x_H2O_luft:.1f} %\n"
-                    "(jede Portion Luft bringt\nihren H₂O-Anteil mit)",
+        ax.annotate("H₂O-Luftfeuchte\n(jede Portion Luft bringt\nihren H₂O-Anteil mit)",
                     xy=(xr, 0.85), va="center", fontsize=7.5, color="#2f5f9e")
 
-    ax.set_xlim(0, xr + 0.75)
-    ax.set_ylim(0, max(lam, 1.05) + 0.1)
+    ax.set_xlim(0, xr + 0.85)
+    ax.set_ylim(-0.13, max(lam, 1.05) + 0.1)
+    # Basis-Hinweis: O2/N2 beziehen sich auf trockene, H2O auf feuchte Luft
+    ax.text(0.5 * (1 + w_feucht), -0.11,
+            "O₂ / N₂: Vol.-% der trockenen Luft   ·   H₂O: Vol.-% der feuchten Luft",
+            ha="center", va="center", fontsize=7.5, color="#555")
     ax.set_title(f"Luftrahmen — Luftzahl λ = {lam:.2f}", fontsize=11)
     ax.set_xticks([])
     ax.set_ylabel("Höhe (× trockene Mindestluft)")
