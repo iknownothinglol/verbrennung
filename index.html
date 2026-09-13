@@ -24,10 +24,12 @@
   .card{background:var(--card);border-radius:10px;padding:14px}
   .card h2{font-size:1rem;margin:.1em 0 .6em}
   svg{width:100%;height:auto;display:block}
-  .controls{margin:18px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 22px}
-  .ctl{display:grid;grid-template-columns:120px 1fr 54px;align-items:center;gap:8px}
-  .ctl label{font-size:.9rem}
-  .ctl output{font-variant-numeric:tabular-nums;text-align:right;color:var(--accent);font-weight:600}
+  .grp{margin:12px 0}
+  .grp h3{font-size:.78rem;color:var(--muted);margin:0 0 6px;letter-spacing:.05em;text-transform:uppercase}
+  .grp-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 22px}
+  .ctl{display:flex;flex-direction:column;gap:3px}
+  .ctl .lab{display:flex;justify-content:space-between;gap:8px;font-size:.86rem}
+  .ctl output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600}
   input[type=range]{width:100%}
   table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.9rem}
   th,td{padding:3px 8px;text-align:right;border-bottom:1px solid rgba(127,127,127,.2)}
@@ -47,7 +49,8 @@
     &nbsp;·&nbsp; <a href="https://github.com/iknownothinglol/verbrennung">Quellcode &amp; Theorie auf GitHub</a>
   </div>
 
-  <div class="controls" id="controls"></div>
+  <div class="grp"><h3>Luft</h3><div class="grp-row" id="grpLuft"></div></div>
+  <div class="grp"><h3>Brennstoff (M.-%)</h3><div class="grp-row" id="grpFuel"></div></div>
   <div class="warn" id="warn"></div>
 
   <div class="grid">
@@ -83,12 +86,12 @@ const FARBE={O2:"var(--o2)",N2:"var(--n2)",CO2:"var(--co2)",H2O:"var(--h2o)",SO2
 const N_FEST=0.02, ASCHE_FEST=0.05;
 
 const REGLER=[
-  {id:"lam",label:"λ  Luftzahl",min:1,max:3,step:0.01,val:1.30,dec:2},
-  {id:"c",label:"C",min:0.30,max:0.90,step:0.005,val:0.55,dec:3},
-  {id:"h",label:"H",min:0,max:0.15,step:0.002,val:0.04,dec:3},
-  {id:"s",label:"S",min:0,max:0.06,step:0.002,val:0.04,dec:3},
-  {id:"w",label:"W  Wasser",min:0,max:0.30,step:0.005,val:0.15,dec:3},
-  {id:"feuchte",label:"Luftfeuchte x_H₂O,L",min:0,max:0.10,step:0.002,val:0.0482,dec:3},
+  {id:"lam",label:"λ  Luftzahl",min:1,max:3,step:0.01,val:1.30,dec:2,grp:"grpLuft"},
+  {id:"feuchte",label:"Luftfeuchte x_H₂O,L",min:0,max:0.10,step:0.002,val:0.0482,dec:3,grp:"grpLuft"},
+  {id:"c",label:"C",min:0.30,max:0.90,step:0.005,val:0.55,dec:3,grp:"grpFuel"},
+  {id:"h",label:"H",min:0,max:0.15,step:0.002,val:0.04,dec:3,grp:"grpFuel"},
+  {id:"s",label:"S",min:0,max:0.06,step:0.002,val:0.04,dec:3,grp:"grpFuel"},
+  {id:"w",label:"W  Wasser",min:0,max:0.30,step:0.005,val:0.15,dec:3,grp:"grpFuel"},
 ];
 
 function berechne(p){
@@ -194,14 +197,12 @@ function tabellen(R){
 
 // --- Regler aufbauen ---
 const state={};
-const cont=document.getElementById("controls");
 for(const r of REGLER){
   state[r.id]=r.val;
   const div=document.createElement("div"); div.className="ctl";
-  div.innerHTML=`<label for="${r.id}">${r.label}</label>
-    <input type="range" id="${r.id}" min="${r.min}" max="${r.max}" step="${r.step}" value="${r.val}">
-    <output id="out_${r.id}">${r.val.toFixed(r.dec)}</output>`;
-  cont.appendChild(div);
+  div.innerHTML=`<div class="lab"><label for="${r.id}">${r.label}</label><output id="out_${r.id}">${r.val.toFixed(r.dec)}</output></div>
+    <input type="range" id="${r.id}" min="${r.min}" max="${r.max}" step="${r.step}" value="${r.val}">`;
+  document.getElementById(r.grp).appendChild(div);
   div.querySelector("input").addEventListener("input",e=>{
     state[r.id]=parseFloat(e.target.value);
     document.getElementById("out_"+r.id).textContent=state[r.id].toFixed(r.dec);
