@@ -71,7 +71,7 @@
       <table id="tabGas"></table>
     </div>
     <div class="hint">O₂ / N₂ als Vol.-% der <b>trockenen</b> Luft · H₂O als Vol.-% der <b>feuchten</b> Luft.
-      Sauerstoff O des Brennstoffs = 1 − C − H − S − N − Asche − W (N und Asche fest).</div>
+      Sauerstoff O des Brennstoffs ergibt sich als Rest: O = 1 − C − H − S − N − Asche − W.</div>
   </div>
 
   <div class="foot">
@@ -83,20 +83,21 @@
 <script>
 const M={C:12,H:1,O:16,S:32,N:14}, M_H2O=18;
 const FARBE={O2:"var(--o2)",N2:"var(--n2)",CO2:"var(--co2)",H2O:"var(--h2o)",SO2:"var(--so2)"};
-const N_FEST=0.02, ASCHE_FEST=0.05;
 
 const REGLER=[
   {id:"lam",label:"λ  Luftzahl",min:1,max:3,step:0.01,val:1.30,dec:2,grp:"grpLuft"},
   {id:"feuchte",label:"Luftfeuchte x_H₂O,L",min:0,max:0.10,step:0.002,val:0.0482,dec:3,grp:"grpLuft"},
-  {id:"c",label:"C",min:0.30,max:0.90,step:0.005,val:0.55,dec:3,grp:"grpFuel"},
+  {id:"c",label:"C",min:0.20,max:0.90,step:0.005,val:0.55,dec:3,grp:"grpFuel"},
   {id:"h",label:"H",min:0,max:0.15,step:0.002,val:0.04,dec:3,grp:"grpFuel"},
   {id:"s",label:"S",min:0,max:0.06,step:0.002,val:0.04,dec:3,grp:"grpFuel"},
+  {id:"n",label:"N",min:0,max:0.10,step:0.002,val:0.02,dec:3,grp:"grpFuel"},
+  {id:"asche",label:"Asche",min:0,max:0.30,step:0.005,val:0.05,dec:3,grp:"grpFuel"},
   {id:"w",label:"W  Wasser",min:0,max:0.30,step:0.005,val:0.15,dec:3,grp:"grpFuel"},
 ];
 
 function berechne(p){
-  const c=p.c,h=p.h,s=p.s,n=N_FEST,w=p.w;
-  const o=Math.max(0,1-c-h-s-n-ASCHE_FEST-w);
+  const c=p.c,h=p.h,s=p.s,n=p.n,w=p.w,asche=p.asche;
+  const o=Math.max(0,1-c-h-s-n-asche-w);
   const nC=c/M.C, nH2=h/(2*M.H), nS=s/M.S, nN2=n/(2*M.N), nO2geb=o/(2*M.O), nH2Ofeu=w/M_H2O;
   const vO2min=nC+0.5*nH2+nS-nO2geb;
   const vLtr=vO2min/0.21*p.lam;
@@ -213,10 +214,10 @@ for(const r of REGLER){
 function update(){
   const R=berechne(state);
   const warn=document.getElementById("warn");
-  const rest=1-state.c-state.h-state.s-N_FEST-ASCHE_FEST-state.w;
+  const rest=1-state.c-state.h-state.s-state.n-state.asche-state.w;
   warn.textContent = rest<0
     ? `⚠ C+H+S+N+Asche+W > 1 — bitte reduzieren (O = ${rest.toFixed(2)})`
-    : `O (Rest) = ${(100*rest).toFixed(1)} M.-%  ·  N ${(100*N_FEST).toFixed(0)} · Asche ${(100*ASCHE_FEST).toFixed(0)} fest`;
+    : `O (Sauerstoff, Rest) = ${(100*rest).toFixed(1)} M.-%   ·   Summe = 100 M.-%`;
   warn.style.color = rest<0 ? "#c0392b" : "var(--muted)";
   zeichneLuft(R); zeichneGas(R); tabellen(R);
 }
