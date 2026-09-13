@@ -8,6 +8,10 @@ der Verbrennung.
 
 ![Kästchen-Modell](kaestchen_modell.png)
 
+> 🌐 **Interaktive Web-Demo (ohne Installation, direkt im Browser):**
+> **https://iknownothinglol.github.io/verbrennung/** — Regler ziehen, Kästchen und
+> Werte-Tabelle rechnen live. (Lokal alternativ `python interaktiv.py`.)
+
 > 📄 **Die konkrete Aufgabenstellung** (Brennstoffanalyse, Gegebene, Fragen) steht
 > in **[`aufgabe.md`](aufgabe.md)** — das Beispiel, das dieses Werkzeug löst.
 

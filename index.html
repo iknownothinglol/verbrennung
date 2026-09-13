@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verbrennungsrechnung — Kästchen-Modell (interaktiv)</title>
+<style>
+  :root{
+    --o2:#7ec8e3; --n2:#d9d9d9; --co2:#595959; --h2o:#4a90d9; --so2:#f2c744;
+    --bg:#ffffff; --fg:#1e1e1e; --muted:#666; --line:#111; --card:#f7f7f8; --accent:#2f5f9e;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#15171a; --fg:#e8e8e8; --muted:#9aa0a6; --card:#1e2126; --n2:#8a8f96; --co2:#c9ccd1; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+  .wrap{max-width:1100px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:1.35rem;margin:.2em 0}
+  .sub{color:var(--muted);font-size:.92rem;margin-bottom:1.2em}
+  .sub a{color:var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  @media (max-width:820px){ .grid{grid-template-columns:1fr} }
+  .card{background:var(--card);border-radius:10px;padding:14px}
+  .card h2{font-size:1rem;margin:.1em 0 .6em}
+  svg{width:100%;height:auto;display:block}
+  .controls{margin:18px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 22px}
+  .ctl{display:grid;grid-template-columns:120px 1fr 54px;align-items:center;gap:8px}
+  .ctl label{font-size:.9rem}
+  .ctl output{font-variant-numeric:tabular-nums;text-align:right;color:var(--accent);font-weight:600}
+  input[type=range]{width:100%}
+  table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.9rem}
+  th,td{padding:3px 8px;text-align:right;border-bottom:1px solid rgba(127,127,127,.2)}
+  th:first-child,td:first-child{text-align:left}
+  .sec td{font-weight:600;color:var(--muted);border:none;padding-top:10px}
+  .hint{color:var(--muted);font-size:.8rem;margin-top:8px}
+  .warn{color:#c0392b;font-weight:600;min-height:1.2em}
+  .foot{color:var(--muted);font-size:.82rem;margin-top:26px;border-top:1px solid rgba(127,127,127,.2);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Verbrennungsrechnung — das Kästchen-Modell (ν)</h1>
+  <div class="sub">
+    Luft und Rauchgas als Kästchen: Mindestluft (Höhe 1) + Überschussluft (Höhe λ−1),
+    O₂ 21 % / N₂ 79 %; Feuchte als H₂O-Spalte. Regler ziehen — alles rechnet live.
+    &nbsp;·&nbsp; <a href="https://github.com/iknownothinglol/verbrennung">Quellcode &amp; Theorie auf GitHub</a>
+  </div>
+
+  <div class="controls" id="controls"></div>
+  <div class="warn" id="warn"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Luftrahmen</h2>
+      <svg id="svgLuft" viewBox="0 0 460 420" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div class="card">
+      <h2>Rauchgas (feucht)</h2>
+      <svg id="svgGas" viewBox="0 0 460 420" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h2>Werte-Tabelle</h2>
+    <div class="grid" style="gap:8px 40px">
+      <table id="tabLuft"></table>
+      <table id="tabGas"></table>
+    </div>
+    <div class="hint">O₂ / N₂ als Vol.-% der <b>trockenen</b> Luft · H₂O als Vol.-% der <b>feuchten</b> Luft.
+      Sauerstoff O des Brennstoffs = 1 − C − H − S − N − Asche − W (N und Asche fest).</div>
+  </div>
+
+  <div class="foot">
+    Modell &amp; Validierung (ERT2 Übung 3) siehe README im Repository. Alle Größen molar, pro kg Brennstoff (kmol/kg<sub>BS</sub>).
+    Ein Lern-/Portfolio-Projekt von Zeming Wang.
+  </div>
+</div>
+
+<script>
+const M={C:12,H:1,O:16,S:32,N:14}, M_H2O=18;
+const FARBE={O2:"var(--o2)",N2:"var(--n2)",CO2:"var(--co2)",H2O:"var(--h2o)",SO2:"var(--so2)"};
+const N_FEST=0.02, ASCHE_FEST=0.05;
+
+const REGLER=[
+  {id:"lam",label:"λ  Luftzahl",min:1,max:3,step:0.01,val:1.30,dec:2},
+  {id:"c",label:"C",min:0.30,max:0.90,step:0.005,val:0.55,dec:3},
+  {id:"h",label:"H",min:0,max:0.15,step:0.002,val:0.04,dec:3},
+  {id:"s",label:"S",min:0,max:0.06,step:0.002,val:0.04,dec:3},
+  {id:"w",label:"W  Wasser",min:0,max:0.30,step:0.005,val:0.15,dec:3},
+  {id:"feuchte",label:"Luftfeuchte x_H₂O,L",min:0,max:0.10,step:0.002,val:0.0482,dec:3},
+];
+
+function berechne(p){
+  const c=p.c,h=p.h,s=p.s,n=N_FEST,w=p.w;
+  const o=Math.max(0,1-c-h-s-n-ASCHE_FEST-w);
+  const nC=c/M.C, nH2=h/(2*M.H), nS=s/M.S, nN2=n/(2*M.N), nO2geb=o/(2*M.O), nH2Ofeu=w/M_H2O;
+  const vO2min=nC+0.5*nH2+nS-nO2geb;
+  const vLtr=vO2min/0.21*p.lam;
+  const vH2OL=p.feuchte>0 ? vLtr*p.feuchte/(1-p.feuchte) : 0;
+  const vLf=vLtr+vH2OL;
+  const vO2ue=(p.lam-1)*vO2min;
+  const vN2=vLtr*0.79+nN2;
+  const rg={CO2:nC,H2O:nH2+nH2Ofeu+vH2OL,SO2:nS,N2:vN2,O2:vO2ue};
+  const vG=rg.CO2+rg.H2O+rg.SO2+rg.N2+rg.O2;
+  return {o,vO2min,vLtr,vH2OL,vLf,vO2ue,vN2,rg,vG,lam:p.lam,feuchte:p.feuchte};
+}
+
+// --- SVG-Helfer ---
+const SVGNS="http://www.w3.org/2000/svg";
+function el(tag,attrs,text){const e=document.createElementNS(SVGNS,tag);
+  for(const k in attrs)e.setAttribute(k,attrs[k]); if(text!=null)e.textContent=text; return e;}
+function rect(svg,x,y,w,h,fill){svg.appendChild(el("rect",{x,y,width:Math.max(w,0),height:Math.max(h,0),
+  fill,stroke:"var(--line)","stroke-width":1.1}));}
+function txt(svg,x,y,t,opts={}){const a={x,y,"font-size":opts.fs||12,fill:opts.fill||"var(--fg)",
+  "text-anchor":opts.anchor||"middle","dominant-baseline":opts.baseline||"middle"};
+  svg.appendChild(el("text",a,t));}
+function line(svg,x1,y1,x2,y2){svg.appendChild(el("line",{x1,y1,x2,y2,stroke:"var(--fg)","stroke-width":.8}));}
+
+function zeichneLuft(R){
+  const svg=document.getElementById("svgLuft"); svg.innerHTML="";
+  const lam=R.lam, unit=118, dryW=200, baseX=40, baseY=360;
+  const wFeucht = R.feuchte>0 ? (R.feuchte/(1-R.feuchte))*dryW : 0;
+  const xO2=0.21*dryW;
+  // Mindestluft (Höhe 1)
+  rect(svg,baseX,baseY-unit,xO2,unit,FARBE.O2);
+  rect(svg,baseX+xO2,baseY-unit,dryW-xO2,unit,FARBE.N2);
+  txt(svg,baseX+xO2/2,baseY-unit/2,"O₂ 21%",{fs:12});
+  txt(svg,baseX+xO2+(dryW-xO2)/2,baseY-unit/2,"N₂ 79%",{fs:12});
+  // Überschussluft (Höhe λ-1)
+  const hue=Math.max(lam-1,0);
+  if(hue>0){
+    rect(svg,baseX,baseY-unit-hue*unit,xO2,hue*unit,FARBE.O2);
+    rect(svg,baseX+xO2,baseY-unit-hue*unit,dryW-xO2,hue*unit,FARBE.N2);
+    if(hue>0.18){txt(svg,baseX+xO2/2,baseY-unit-hue*unit/2,"O₂",{fs:11});
+                 txt(svg,baseX+xO2+(dryW-xO2)/2,baseY-unit-hue*unit/2,"N₂",{fs:11});}
+  }
+  // H2O-Spalte (volle Höhe λ)
+  if(wFeucht>0){
+    rect(svg,baseX+dryW,baseY-lam*unit,wFeucht,lam*unit,FARBE.H2O);
+    line(svg,baseX+dryW+wFeucht,baseY-lam*unit/2,baseX+dryW+wFeucht+14,baseY-lam*unit/2);
+    txt(svg,baseX+dryW+wFeucht+18,baseY-lam*unit/2,(100*R.feuchte).toFixed(1)+"%",{fs:11,anchor:"start",fill:"var(--accent)"});
+  }
+  // Beschriftungen rechts
+  const xr=baseX+dryW+wFeucht+40;
+  txt(svg,xr,baseY-unit/2,"Mindestluft (Höhe 1)",{fs:11,anchor:"start"});
+  if(hue>0)txt(svg,xr,baseY-unit-hue*unit/2,"Überschussluft (λ−1="+hue.toFixed(2)+")",{fs:11,anchor:"start"});
+  if(wFeucht>0)txt(svg,xr,baseY-lam*unit-8,"H₂O-Luftfeuchte",{fs:10,anchor:"start",fill:"var(--accent)"});
+  // Achse/Basis
+  line(svg,baseX,baseY,baseX+dryW+wFeucht+2,baseY);
+  txt(svg,baseX,388,"O₂/N₂: % der trockenen Luft · H₂O: % der feuchten Luft",{fs:9.5,anchor:"start",fill:"var(--muted)"});
+  txt(svg,baseX-6,baseY-lam*unit,"λ="+lam.toFixed(2),{fs:10,anchor:"end"});
+}
+
+function zeichneGas(R){
+  const svg=document.getElementById("svgGas"); svg.innerHTML="";
+  const totalH=320, x=70, w=180, baseY=350;
+  const a={}; for(const k in R.rg)a[k]=R.rg[k]/R.vG;
+  const order=["CO2","H2O","SO2","N2","O2"];
+  const name={CO2:"CO₂",H2O:"H₂O",SO2:"SO₂",N2:"N₂",O2:"O₂ (Überschuss)"};
+  let y=baseY;
+  for(const k of order){
+    const hh=a[k]*totalH;
+    rect(svg,x,y-hh,w,hh,FARBE[k]);
+    const pct=(100*a[k]).toFixed(a[k]<0.01?2:1)+"%";
+    if(hh>=20){ txt(svg,x+w/2,y-hh/2,name[k]+"  "+pct,{fs:11}); }
+    else { line(svg,x+w,y-hh/2,x+w+16,y-hh/2);
+           txt(svg,x+w+20,y-hh/2,name[k]+"  "+pct,{fs:10.5,anchor:"start"}); }
+    y-=hh;
+  }
+  line(svg,x,baseY,x+w,baseY);
+  txt(svg,x+w/2,baseY+22,"Σ v_G = "+R.vG.toFixed(4)+" kmol/kg",{fs:10,fill:"var(--muted)"});
+}
+
+function fmt(v,d){return v.toFixed(d);}
+function tabellen(R){
+  const tl=document.getElementById("tabLuft");
+  tl.innerHTML=`<tr class="sec"><td colspan="2">Luft (kmol/kg_BS)</td></tr>
+    <tr><td>λ Luftzahl</td><td>${fmt(R.lam,2)}</td></tr>
+    <tr><td>v_O₂,min</td><td>${fmt(R.vO2min,4)}</td></tr>
+    <tr><td>v_L,tr (trocken)</td><td>${fmt(R.vLtr,4)}</td></tr>
+    <tr><td>v_H₂O,Luft</td><td>${fmt(R.vH2OL,4)}</td></tr>
+    <tr><td>v_L,feucht</td><td>${fmt(R.vLf,4)}</td></tr>
+    <tr><td>v_O₂,überschuss</td><td>${fmt(R.vO2ue,4)}</td></tr>
+    <tr><td>v_N₂</td><td>${fmt(R.vN2,4)}</td></tr>`;
+  const tg=document.getElementById("tabGas");
+  const a={}; for(const k in R.rg)a[k]=R.rg[k]/R.vG;
+  const rows=[["CO₂","CO2"],["H₂O","H2O"],["SO₂","SO2"],["N₂","N2"],["O₂","O2"]]
+    .map(([nm,k])=>`<tr><td>${nm}</td><td>${fmt(R.rg[k],4)}</td><td>${(100*a[k]).toFixed(2)}</td></tr>`).join("");
+  tg.innerHTML=`<tr class="sec"><td>Rauchgas</td><td>kmol/kg</td><td>Vol.-%</td></tr>
+    ${rows}
+    <tr><td><b>Σ v_G</b></td><td><b>${fmt(R.vG,4)}</b></td><td><b>100,00</b></td></tr>`;
+}
+
+// --- Regler aufbauen ---
+const state={};
+const cont=document.getElementById("controls");
+for(const r of REGLER){
+  state[r.id]=r.val;
+  const div=document.createElement("div"); div.className="ctl";
+  div.innerHTML=`<label for="${r.id}">${r.label}</label>
+    <input type="range" id="${r.id}" min="${r.min}" max="${r.max}" step="${r.step}" value="${r.val}">
+    <output id="out_${r.id}">${r.val.toFixed(r.dec)}</output>`;
+  cont.appendChild(div);
+  div.querySelector("input").addEventListener("input",e=>{
+    state[r.id]=parseFloat(e.target.value);
+    document.getElementById("out_"+r.id).textContent=state[r.id].toFixed(r.dec);
+    update();
+  });
+}
+
+function update(){
+  const R=berechne(state);
+  const warn=document.getElementById("warn");
+  const rest=1-state.c-state.h-state.s-N_FEST-ASCHE_FEST-state.w;
+  warn.textContent = rest<0
+    ? `⚠ C+H+S+N+Asche+W > 1 — bitte reduzieren (O = ${rest.toFixed(2)})`
+    : `O (Rest) = ${(100*rest).toFixed(1)} M.-%  ·  N ${(100*N_FEST).toFixed(0)} · Asche ${(100*ASCHE_FEST).toFixed(0)} fest`;
+  warn.style.color = rest<0 ? "#c0392b" : "var(--muted)";
+  zeichneLuft(R); zeichneGas(R); tabellen(R);
+}
+update();
+</script>
+</body>
+</html>
