@@ -50,10 +50,11 @@ N            → N₂   (unverändert ins Rauchgas)
 ```
 
 Der im Brennstoff gebundene Sauerstoff senkt den O₂-Bedarf; **feuchte
-Verbrennungsluft** bringt zusätzlich H₂O ins Rauchgas. Im Luftrahmen sitzt diese
-Luftfeuchte als H₂O-Band **oben auf** der trockenen Luft — sie verändert die
-O₂/N₂-Teilung und damit die **N₂-Menge nicht** (das N₂ folgt allein der trockenen
-Luft). Alle Mengen sind molar, pro kg Brennstoff (kmol/kg\_BS).
+Verbrennungsluft** bringt zusätzlich H₂O ins Rauchgas. Im Luftrahmen erscheint diese
+Luftfeuchte als **H₂O-Spalte rechts** über die volle Höhe — jede Portion Luft bringt
+ihren proportionalen H₂O-Anteil mit. Sie verändert die O₂/N₂-Teilung und damit die
+**N₂-Menge nicht** (das N₂ folgt allein der trockenen Luft). Alle Mengen sind molar,
+pro kg Brennstoff (kmol/kg\_BS).
 
 ## Was das Werkzeug kann
 
@@ -88,8 +89,12 @@ $ python beispiel_uebung3.py
 |---|---|---|
 | v\_O₂,min | 0,0524 | 0,0524 |
 | v\_L,tr | 0,3244 | 0,3243 |
-| v\_N₂ | 0,2562 | ≈ 0,2562 |
-| v\_G (feucht) | 0,3637 | 0,3637 |
+| v\_N₂ (aus Luft) | 0,2562 | ≈ 0,2562 |
+| v\_G (feucht) | 0,3645 | 0,3637 |
+
+> Kleine Abweichung bei v\_G: Das Skript rechnet den **brennstoffgebundenen
+> Stickstoff** (N = 2 M.-%) zusätzlich ins Rauchgas-N₂ (+0,0007 kmol/kg); die
+> Übungslösung vernachlässigt ihn. Das Skript ist hier also etwas vollständiger.
 
 ## Nutzung
 
