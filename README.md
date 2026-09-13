@@ -8,6 +8,9 @@ der Verbrennung.
 
 ![Kästchen-Modell](kaestchen_modell.png)
 
+> 📄 **Die konkrete Aufgabenstellung** (Brennstoffanalyse, Gegebene, Fragen) steht
+> in **[`aufgabe.md`](aufgabe.md)** — das Beispiel, das dieses Werkzeug löst.
+
 ## Die Idee
 
 **Luftrahmen.** Die Verbrennungsluft wird als Rahmen gedacht, volumetrisch geteilt
