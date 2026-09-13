@@ -23,8 +23,8 @@ Dieses Projekt verfolgt **zwei Ziele**:
 2. die **Demonstration des Einsatzes von KI** als Werkzeug.
 
 > **Transparenzhinweis:** Der gesamte Code dieses Projekts wurde von einer KI
-> generiert — ich habe selbst nicht programmiert. Das fachliche Denkmodell, die
-> Steuerung und die Validierung gegen die Übungsaufgabe stammen von mir.
+> generiert — ich habe selbst nicht programmiert. Von mir stammen das Denkmodell
+> (siehe *Die Idee*), die fachliche Steuerung und die Validierung.
 
 ## Die Idee
 
