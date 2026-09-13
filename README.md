@@ -39,8 +39,9 @@ Luft). Alle Mengen sind molar, pro kg Brennstoff (kmol/kg\_BS).
 
 - **Vorwärtsrechnung:** Brennstoffanalyse (C/H/S/N/O/Asche/W) + λ (+ Luftfeuchte)
   → Luftmengen und Rauchgas (Mengen und volumetrische Zusammensetzung).
-- **Interaktiv:** Schieberegler für λ, Zusammensetzung und Luftfeuchte,
-  Kästchen aktualisieren sich in Echtzeit.
+- **Interaktiv:** Schieberegler für λ, Zusammensetzung und Luftfeuchte;
+  Kästchen **und eine Werte-Tabelle** (Luft- und Rauchgasmengen, Vol.-%)
+  aktualisieren sich in Echtzeit.
 - **Validiert:** gegen eine ERT2-Übungsaufgabe (siehe unten) mit Tests.
 
 ## Kern-Formeln (Kästchen-Modell, ν)
