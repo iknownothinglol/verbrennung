@@ -79,10 +79,19 @@ def zeichne_rauchgas(ax, rg: Rauchgas):
     y = 0.0
     for k in reihenfolge:
         h = anteile[k]
-        _kasten(ax, 0, y, 1, h, FARBE[k], f"{labels[k]}\n{100*h:.1f} %")
+        _kasten(ax, 0, y, 1, h, FARBE[k])           # ohne Text zeichnen
+        ymid = y + h / 2
+        prozent = f"{100*h:.2f} %" if h < 0.01 else f"{100*h:.1f} %"
+        if h >= 0.05:
+            ax.text(0.5, ymid, f"{labels[k]}\n{prozent}", ha="center", va="center", fontsize=9)
+        else:
+            # zu dünnes Kästchen: Label mit Führungslinie nach rechts
+            ax.annotate(f"{labels[k]}  {prozent}", xy=(1, ymid), xytext=(1.10, ymid),
+                        va="center", fontsize=8,
+                        arrowprops=dict(arrowstyle="-", lw=0.8, color="black"))
         y += h
 
-    ax.set_xlim(0, 1.5)
+    ax.set_xlim(0, 1.75)
     ax.set_ylim(0, 1.0)
     ax.set_title("Rauchgas (feucht)", fontsize=11)
     ax.set_xticks([])
